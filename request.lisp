@@ -560,7 +560,17 @@ Any encodings in Transfer-Encoding, such as chunking, are always performed."
                                                           #-:lw-does-not-have-write-timeout
                                                           write-timeout
                                                           :errorp t)
-                                    #-:lispworks
+				    #+:sbcl
+				    (let ((sd (make-instance 'sb-bsd-sockets:inet-socket :type :stream :protocol :tcp)))
+				      (sb-bsd-sockets:socket-connect sd
+								     (sb-bsd-sockets:host-ent-address
+								      (sb-bsd-sockets:get-host-by-name host))
+								     port)
+				      (sb-bsd-sockets:socket-make-stream
+				       sd
+				       :output t :input t :timeout connection-timeout
+				       :element-type 'drakma::octet))
+                                    #-:sbcl
                                     (usocket:socket-stream
                                      (usocket:socket-connect host port
                                                              :element-type 'octet
